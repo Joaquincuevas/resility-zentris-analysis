@@ -1,0 +1,109 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Resility",
+    "alternateName": "Resility CyberSOC & IA",
+    "url": "https://www.resility.io",
+    "logo": "https://www.resility.io/assets/images/673c9f2d387814db2ac1940e_256x256_15b6f43c.png",
+    "description": "Empresa líder de ciberseguridad gestionada en Chile con SOC propio 24/7, servicios ofensivos (ethical hacking), cumplimiento normativo (Ley 21.663 ANCI e ISO 27001) y plataforma de agentes de IA Zentris.",
+    "foundingDate": "2016",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Santiago",
+      "addressCountry": "CL"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "ventas@resility.io",
+      "contactType": "sales",
+      "areaServed": [
+        "CL",
+        "PE",
+        "CO",
+        "ES"
+      ],
+      "availableLanguage": [
+        "es",
+        "en"
+      ]
+    },
+    "sameAs": [
+      "https://www.linkedin.com/company/resility/",
+      "https://www.linkedin.com/company/resilityacademy/",
+      "https://www.youtube.com/@resilitypodcast"
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Resility",
+    "url": "https://www.resility.io",
+    "inLanguage": "es",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://www.resility.io/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Zentris",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Cloud / Agentless",
+    "description": "SOC construido con agentes de IA y pentesting continuo 24/7 desarrollado en Chile por Resility con respaldo de ProChile.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Evaluación técnica inicial y diagnóstico preliminar sin costo."
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Cuál es el tiempo de respuesta (SLA) del CyberSOC 24/7 ante un incidente crítico?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Garantizamos primera respuesta e investigación técnica en menos de 15 minutos para incidentes de severidad crítica, operando 24x7x365 con analistas N1, N2 y Expert-in-the-loop."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cómo ayuda Resility a cumplir con la Ley N° 21.663 de Ciberseguridad y la ANCI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Implementamos monitoreo continuo, trazabilidad de incidentes y generación de evidencias técnicas exigidas para Operadores de Importancia Vital (OIV) y reporte de incidentes en plazos de hasta 3 horas ante la ANCI."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué es Zentris y cómo reduce los costos frente a un SOC tradicional?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Zentris es nuestra plataforma con cerca de 20 agentes de IA que investigan alertas a velocidad de máquina, descartan el 93% de falsos positivos y ejecutan pentesting continuo sin descanso humano, reduciendo costos operativos hasta en 85%."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Necesitamos cambiar nuestros EDRs, firewalls o proveedores de nube actuales?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Resility opera de forma agnóstica integrándose directamente con Microsoft Defender, Bitdefender, CrowdStrike, Fortinet, Palo Alto, AWS, Azure, Google Cloud y más."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Resility cuenta con certificación ISO/IEC 27001?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí. Resility cuenta con certificación de su Sistema de Gestión de Seguridad de la Información (SGSI) bajo la norma ISO/IEC 27001:2022 y un equipo con más de 71 certificaciones técnicas."
+        }
+      }
+    ]
+  }
+]

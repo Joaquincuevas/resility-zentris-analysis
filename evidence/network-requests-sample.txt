@@ -1,0 +1,22 @@
+Muestra de requests observados al cargar https://resility.io/ (reconocimiento pasivo, mismo
+trafico que ve cualquier visitante del sitio con un navegador normal). Capturado 2026-11-20.
+
+GET  /                                              200
+GET  /assets/css/resility-theme.css                 200
+GET  /assets/js/head-init.js                        200
+GET  /assets/js/meta-pixel.js?v=20260928a           200   (Meta Pixel)
+GET  /assets/js/google-ads.js?v=20261028a           200   (Google Ads conversion tag)
+GET  /assets/js/linkedin-insight.js?v=20261028a     200   (LinkedIn Insight Tag)
+GET  /_astro/comenzar.CBXkAmqv.css                  200   (build output de Astro)
+GET  /assets/js/jquery-3.5.1.min...js               200
+GET  /assets/js/theme-core.js                       200
+GET  /assets/js/theme-runtime.js                    200
+GET  /assets/js/gsap.min...js                        200   (GSAP)
+GET  /assets/js/ScrollTrigger.min...js               200   (GSAP ScrollTrigger)
+GET  /assets/js/site.js?v=20260928a                  200   (logica propia: contiene fetch a /api/contact)
+POST /cdn-cgi/rum                                    204   (Cloudflare Web Analytics - RUM beacon)
+
+Dominios de terceros referenciados vía CSP / tags de marketing:
+  static.cloudflareinsights.com, challenges.cloudflare.com (Cloudflare Turnstile),
+  connect.facebook.net, www.googletagmanager.com, googleads.g.doubleclick.net,
+  www.googleadservices.com, snap.licdn.com, px.ads.linkedin.com, secure.trust-provider.com
