@@ -1,0 +1,399 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noindentfirst]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{xcolor}
+\definecolor{brandblue}{HTML}{0B3C6B}
+\definecolor{brandgray}{HTML}{4A4A4A}
+\definecolor{tablehead}{HTML}{E8EEF4}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=brandblue,
+  urlcolor=brandblue,
+  citecolor=brandblue,
+  pdftitle={Analisis tecnico Resility / Zentris},
+  pdfauthor={Joaquin Cuevas}
+}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{graphicx}
+
+\titleformat{\section}{\large\bfseries\color{brandblue}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\bfseries\color{brandblue}}{\thesubsection}{0.5em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{brandgray} Resility / Zentris -- Analisis tecnico}
+\fancyhead[R]{\small\color{brandgray} \thepage}
+\fancyfoot[C]{\small\color{brandgray} Informe de uso interno -- OSINT pasivo, 2026-11-20}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{\color{brandblue}\textbf{Resility / Zentris}\\[0.3em]
+\Large Analisis tecnico de seguridad e inteligencia artificial\\[0.2em]
+\large Informe de referencia para hackathon de Ciberseguridad + IA (SOC / agentes)}
+\author{Joaquin Cuevas}
+\date{20 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{center}
+\colorbox{tablehead}{\parbox{0.92\textwidth}{\small
+\textbf{Nota de alcance:} este informe se construyo exclusivamente con reconocimiento
+pasivo sobre informacion publica de \url{resility.io} (HTML, cabeceras HTTP, \texttt{robots.txt},
+datos estructurados JSON-LD, JavaScript servido publicamente, y descripciones publicas del
+producto). No se realizaron pruebas activas, escaneos de vulnerabilidades ni ningun tipo de
+interaccion con la plataforma Zentris en si, que es un producto SaaS para clientes y no una
+aplicacion descargable. Las cifras de desempeno citadas son afirmaciones del proveedor, no
+verificadas de forma independiente.}}
+\end{center}
+
+\vspace{0.5em}
+\tableofcontents
+\vspace{1em}
+
+% ---------------------------------------------------------------------------
+\section{Resumen ejecutivo}
+
+\textbf{Resility} es una empresa chilena de ciberseguridad gestionada (MSSP), fundada en 2016,
+con SOC propio 24/7 en Santiago y presencia en Chile, Peru, Colombia y Espana. Su diferenciador
+competitivo es \textbf{Zentris}, una plataforma propia de agentes de IA (``SOC agentico'') que
+automatiza triage de alertas, gestion continua de exposicion y pentesting continuo sobre el
+stack de seguridad que el cliente ya tiene, sin reemplazar EDR/SIEM existentes (modelo
+\emph{agentless}).
+
+Para una hackathon de \textbf{Ciberseguridad + IA / agentes de SOC}, Zentris es un caso de
+referencia util en tres sentidos:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Es un \textbf{patron de arquitectura validado comercialmente}: pipeline de ingesta
+  $\rightarrow$ triage multiagente $\rightarrow$ validacion humana (\emph{Expert-in-the-loop},
+  EITL) $\rightarrow$ respuesta. Sirve como blueprint de partida.
+  \item Expone \textbf{vacios publicos concretos} (gobernanza de agentes ofensivos autonomos,
+  explicabilidad de decisiones, aislamiento multi-tenant, metodologia de metricas) que son
+  exactamente el tipo de problema que un equipo de hackathon puede resolver y demostrar en
+  una demo corta.
+  \item Su propio sitio muestra \textbf{buenas practicas de higiene tecnica} (CSP estricta,
+  HSTS preload, \texttt{robots.txt} con \emph{content signals} anti-entrenamiento de IA) que
+  sirven de checklist minimo para cualquier proyecto que se presente.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section{Metodologia}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Fuente de verdad:} unicamente contenido publico (sitio web, \texttt{robots.txt},
+  JSON-LD, JavaScript estatico, FAQ, material de prensa/ProChile referenciado por el propio sitio).
+  \item \textbf{Herramienta evaluada:} \href{https://github.com/morluto/rea}{REA (``Reverse
+  Engineer Anything'')}, una utilidad MIT de proposito general para ingenieria inversa de
+  binarios, apps Electron/JS y sitios web. No contenia nada especifico de Resility; se usa aqui
+  solo como referencia metodologica (su guia de ``browser observation'' para sitios web),
+  aplicada manualmente.
+  \item \textbf{Sin pruebas activas:} no se ejecutaron escaneos de puertos, fuzzing, intentos de
+  autenticacion, ni se interactuo con la plataforma Zentris (no es accesible publicamente).
+  \item \textbf{Evidencia cruda} disponible en el repositorio: cabeceras HTTP, \texttt{robots.txt},
+  JSON-LD y una muestra de requests de red observados al cargar la pagina de inicio.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Resility: panorama de la empresa}
+
+\begin{longtable}{L{4cm}L{11cm}}
+\toprule
+\textbf{Dato} & \textbf{Detalle} \\
+\midrule
+\endhead
+Fundacion & 2016 (``10 anos de servicio'') \\
+Sede / SOC & Santiago, Chile (SOC propio, operacion 24x7x365) \\
+Presencia & Chile, Peru, Colombia, Espana \\
+Certificacion & ISO/IEC 27001:2022 (SGSI certificado, auditado) \\
+Marco regulatorio objetivo & Ley 21.663 (Marco de Ciberseguridad / ANCI, reporte en 3h para
+Operadores de Importancia Vital), Ley 21.719 (datos personales), normativa CMF (banca, fintech,
+seguros, cooperativas) \\
+Equipo & 14 especialistas en operacion/ofensiva/desarrollo; 71 certificaciones del equipo;
+niveles N1, N2 y EITL (Expert-in-the-loop) \\
+Grupo & 3 empresas bajo un mismo ecosistema: Resility (servicios gestionados), Zentris (producto
+de IA propio), Staff21x (agentes de IA para automatizacion B2B general) \\
+Clientes citados & Sector financiero, mineria, salud, retail e industria critica (logos
+publicados: Gasco, Collahuasi, CAP, Red Salud, Autofin, Capual, Talana, entre otros) \\
+Reconocimiento & Zentris seleccionado por ProChile para misiones comerciales (Colombia, Peru,
+Nueva York, Portugal) \\
+\bottomrule
+\end{longtable}
+
+\subsection{Servicios ofrecidos (lineas de negocio)}
+
+\begin{longtable}{L{4cm}L{11cm}}
+\toprule
+\textbf{Linea} & \textbf{Servicios} \\
+\midrule
+\endhead
+Gestionados 24x7 & MDR gestionado, CyberSOC 24x7 o 5x8, NOC-as-a-Service, gestion de
+vulnerabilidades (Tenable), CAASM (inventario de ciberactivos), gestion de endpoints/EDR,
+gestion de firewalls perimetrales \\
+Profesionales / ofensivos & Ethical hacking, pentesting de apps web/moviles/APIs, red/purple
+team, re-testing tecnico, respuesta a incidentes (IR), analisis forense digital, salas de crisis
+/ TTX, ethical phishing \\
+Consultoria y cumplimiento & Preparacion ANCI (Ley 21.663), adecuacion Ley 21.719, implementacion
+y auditoria ISO 27001, diagnostico CIS v8, normativa CMF \\
+Capacitacion & Resility Academy (SOC N1, threat hunting, IR forense, cloud security), programas
+de \emph{awareness} (phishing simulado, ingenieria social, programa C-level) \\
+\bottomrule
+\end{longtable}
+
+\subsection{Stack tecnologico declarado}
+
+Wazuh (SIEM/XDR open source), Tenable/Nessus (exposure management), Bitdefender GravityZone
+(EDR), Grafana Enterprise (dashboards), Akamai (nube de alta disponibilidad, 99.9\% uptime
+reclamado para su plataforma), Fortinet / Check Point / Palo Alto / pfSense (firewalls),
+Microsoft Sentinel / Microsoft 365, y MITRE ATT\&CK\textregistered{} como marco de mapeo de
+detecciones.
+
+% ---------------------------------------------------------------------------
+\section{Zentris: arquitectura de IA (segun fuentes publicas)}
+
+Zentris se presenta como ``SOC agentico'': agentes de IA que investigan, clasifican y responden
+sobre el EDR/SIEM existente del cliente, mas un modulo de pentesting continuo. Es una plataforma
+\textbf{agentless} (se conecta por API en la nube, sin instalar agentes pesados ni hardware).
+
+\subsection{Pipeline de operacion}
+
+\begin{longtable}{L{2.6cm}L{12.4cm}}
+\toprule
+\textbf{Etapa} & \textbf{Descripcion publica} \\
+\midrule
+\endhead
+1. Recolecta & Correlacion de eventos SIEM/XDR: endpoints EDR, firewalls, nube AWS/Azure/GCP,
+Active Directory, Microsoft 365. \\
+2. Investiga & ``Agentes Zentris'': triage autonomo y enriquecimiento de alertas con inteligencia
+de amenazas ``a velocidad de maquina''. \\
+3. Valida & Analistas humanos N1/N2 + \textbf{EITL} (Expert-in-the-loop) para descartar falsos
+positivos y evaluar contexto critico. \\
+4. Responde & Contencion activa (aislamiento de hosts comprometidos), escalamiento inmediato,
+reporte formal segun SLA. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Modulos del producto}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Pentesting continuo 24x7}: ``agentes ofensivos sin pausa''; al corregir una
+  vulnerabilidad la alerta se cierra automaticamente (sin re-test manual programado).
+  \item \textbf{Exposure management}: revision continua de sitios y superficie expuesta a
+  internet, declarado ``sin tope de URLs''.
+  \item \textbf{SOC agentico}: investigacion/clasificacion/respuesta automatizada sobre el
+  EDR/SIEM existente.
+  \item \textbf{NOC unificado}: disponibilidad y metricas de desempeno en el mismo panel.
+  \item \textbf{Cumplimiento y reporteria en espanol}: generacion automatica de evidencia para
+  Ley 21.663 (ANCI), ISO 27001, CMF y NIST CSF, con vision ejecutiva para directorio/regulador.
+  \item \textbf{Integraciones de alertamiento}: Slack, Microsoft Teams, Discord, Webhooks.
+  \item \textbf{Despliegue agentless}: 24--48 horas, via API en la nube.
+\end{itemize}
+
+\subsection{Metricas de marketing (no auditadas)}
+
+\begin{longtable}{L{6cm}L{8cm}}
+\toprule
+\textbf{Metrica} & \textbf{Valor declarado} \\
+\midrule
+\endhead
+Tiempo de deteccion & \texttt{< 15 min} \\
+Reduccion de falsos positivos & \texttt{-93\%} \\
+Tiempo de despliegue & \texttt{24--48 h} \\
+Costo vs. SOC tradicional & \texttt{-85\%} \\
+Composicion de agentes & ``\textasciitilde 20 agentes especializados autonomos'' \\
+\bottomrule
+\end{longtable}
+
+\textbf{Importante:} no hay metodologia publica (baseline, tamano de muestra, si son promedios
+de clientes reales) detras de estas cifras. Tratarlas como afirmaciones de marketing, no como
+benchmarks verificados.
+
+% ---------------------------------------------------------------------------
+\section{Postura de seguridad del sitio publico}
+
+Evidencia cruda en el repositorio: \texttt{evidence/headers-resility-io.txt},
+\texttt{evidence/robots.txt}, \texttt{evidence/structured-data.json},
+\texttt{evidence/network-requests-sample.txt}.
+
+\begin{longtable}{L{4cm}L{11cm}}
+\toprule
+\textbf{Aspecto} & \textbf{Hallazgo} \\
+\midrule
+\endhead
+Hosting / CDN & Cloudflare (\texttt{Server: cloudflare}, beacon RUM en \texttt{/cdn-cgi/rum}).
+Sitio generado con \textbf{Astro} (\texttt{/\_astro/*.css}), con al menos una ruta de API propia
+(\texttt{/api/contact}, detectada en \texttt{site.js}) -- probablemente Cloudflare
+Pages/Workers/Functions. \\
+Cabeceras de seguridad & HSTS con \texttt{preload} e \texttt{includeSubDomains};
+\texttt{Content-Security-Policy} estricta (\texttt{default-src 'self'}, sin
+\texttt{unsafe-inline} en scripts, usa hash \texttt{sha256-...} para el unico inline permitido);
+\texttt{X-Frame-Options: SAMEORIGIN}; \texttt{X-Content-Type-Options: nosniff};
+\texttt{Cross-Origin-Opener-Policy: same-origin}; \texttt{Permissions-Policy} restrictiva
+(geolocalizacion, camara, microfono, pagos y USB deshabilitados). \\
+Anti-bot & Cloudflare Turnstile + captcha matematico simple en el formulario de contacto
+(doble capa). \\
+Certificado & Sectigo PositiveSSL. \\
+Tracking & Meta Pixel, Google Ads, LinkedIn Insight Tag, Google Tag Manager -- declarados
+explicitamente como dominios permitidos en la CSP. \\
+\texttt{robots.txt} & Usa \emph{Content Signals} (\texttt{search=yes, ai-train=no,
+use=reference}) y bloquea explicitamente crawlers de entrenamiento de IA (GPTBot, ClaudeBot,
+Google-Extended, Bytespider, CCBot, etc.), permitiendo indexacion de busqueda normal. \\
+Datos estructurados & JSON-LD declara \texttt{Organization}, \texttt{WebSite}, \texttt{FAQPage}
+y un \texttt{SoftwareApplication} para Zentris (\texttt{applicationCategory:
+SecurityApplication}, \texttt{operatingSystem: Cloud / Agentless}). \\
+\bottomrule
+\end{longtable}
+
+\textbf{Lectura:} la higiene del sitio de marketing es solida y coherente con el discurso de
+``predicar con el ejemplo''. Pero esto certifica solo el sitio publico, no dice nada sobre la
+seguridad real del backend de Zentris (multi-tenencia, aislamiento entre clientes, gestion de
+credenciales de integracion con el SIEM/EDR de cada cliente), que no es observable desde afuera.
+
+% ---------------------------------------------------------------------------
+\section{Vacios y oportunidades identificadas}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Gobernanza de agentes ofensivos autonomos}: no hay informacion publica sobre
+  guardrails, sandboxing o reglas de engagement para los ``agentes de pentesting continuo''
+  que actuan 24/7 sobre produccion del cliente. Riesgo de disenio: falsos positivos destructivos,
+  necesidad de ventanas/alcance controlado.
+  \item \textbf{Explicabilidad}: no se publica como los agentes de triage justifican una
+  decision (evidencia, cadena de razonamiento, trazabilidad por regulacion ANCI/CMF).
+  \item \textbf{Orquestacion multiagente}: ``\textasciitilde 20 agentes'' sin detalle de que
+  framework de orquestacion, que modelo(s) LLM, ni como se coordinan o resuelven conflictos
+  entre agentes.
+  \item \textbf{Aislamiento multi-tenant}: sin informacion publica sobre como se separan datos
+  y credenciales de distintos clientes dentro de una plataforma agentless compartida.
+  \item \textbf{Metodologia de metricas}: SLA, \% de falsos positivos y ahorro de costos son
+  afirmaciones sin benchmark reproducible.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section{\color{brandblue} Para la hackathon: Ciberseguridad + IA (SOC / agentes)}
+
+Esta seccion traduce los hallazgos anteriores en material directamente utilizable para una
+hackathon centrada en agentes de IA para SOC/ciberseguridad.
+
+\subsection{Blueprint de referencia (derivado de Zentris)}
+
+Un pipeline minimo viable para una demo de ``SOC agentico'', inspirado en el patron observado:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Ingesta}: conector agentless hacia una fuente de eventos (puede ser un SIEM
+  real tipo Wazuh/OSSEC, o un dataset simulado de alertas para la demo).
+  \item \textbf{Triage multiagente}: 2--4 agentes especializados (ej. agente de
+  enriquecimiento de IOC, agente de correlacion MITRE ATT\&CK, agente de priorizacion por
+  riesgo) que procesan la alerta en paralelo.
+  \item \textbf{Capa de evidencia}: cada agente debe producir una salida con \emph{evidencia
+  citada} (que regla disparo, que indicador, que confianza) -- esto es justamente lo que
+  Zentris \textbf{no} publica y es un diferenciador facil de demostrar en una demo.
+  \item \textbf{Human-in-the-loop (EITL)}: un paso de aprobacion/veto humano simulado antes de
+  cualquier accion de contencion, con la evidencia de la etapa anterior como input.
+  \item \textbf{Respuesta}: accion simulada (aislar host, abrir ticket, notificar por
+  Slack/Webhook) con log auditable.
+\end{enumerate}
+
+\subsection{Checklist tecnico para evaluar/presentar un proyecto de ``agente de SOC''}
+
+\begin{longtable}{L{4.5cm}L{10.5cm}}
+\toprule
+\textbf{Criterio} & \textbf{Por que importa (y que casi nadie publica)} \\
+\midrule
+\endhead
+Guardrails de acciones autonomas & Limites explicitos de lo que un agente puede hacer sin
+aprobacion humana (especialmente en pentesting u ofensiva autonoma). \\
+Explicabilidad / evidencia & Cada decision deberia venir con la evidencia que la sustenta, no
+solo un veredicto. \\
+Reduccion de falsos positivos medible & Definir baseline y metodologia antes de prometer un
+\%. \\
+Human-in-the-loop real & Punto de control humano para acciones criticas o irreversibles. \\
+Trazabilidad para cumplimiento & Logs/evidencia exportable mapeada a un marco (MITRE ATT\&CK,
+ISO 27001, NIST CSF) -- vende bien a jurados con perfil empresarial. \\
+Aislamiento / multi-tenencia & Si el proyecto es multi-cliente, mostrar como se separan datos
+y credenciales. \\
+Costo de integracion & Favorecer modelos ``agentless'' (API) sobre instalacion de agentes
+pesados -- reduce friccion de adopcion, tal como vende Zentris. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Ideas de proyecto concretas}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{``Evidencia primero''}: un agente de triage que, a diferencia de lo que Zentris
+  publica, muestre explicitamente su cadena de evidencia (regla MITRE ATT\&CK, IOC, nivel de
+  confianza) para cada alerta clasificada -- resuelve el vacio de explicabilidad identificado
+  en la seccion 6.
+  \item \textbf{Guardrails para pentesting autonomo}: un framework ligero de ``reglas de
+  engagement'' (RoE) programables -- ventanas horarias, alcance de IPs/dominios, severidad
+  maxima de explotacion permitida -- que envuelva cualquier agente ofensivo autonomo antes de
+  ejecutar una accion contra un objetivo real.
+  \item \textbf{Validador de metricas de SOC con IA}: una herramienta que, dado un log de
+  alertas reales vs. clasificacion de un agente, calcule tasa de falsos positivos/negativos de
+  forma reproducible -- justo la metodologia que falta en el marketing de la industria (y de
+  Zentris).
+  \item \textbf{Reporte de cumplimiento automatico}: generador que tome eventos de seguridad y
+  los mapee automaticamente a evidencia para Ley 21.663 (ANCI) / ISO 27001 -- demo rapida y con
+  gancho regulatorio local (Chile).
+  \item \textbf{Mini-SOC multiagente open source}: usando Wazuh (gratis) + un orquestador de
+  agentes (framework de agentes LLM a eleccion del equipo) + un dashboard tipo Grafana, para
+  reproducir el patron de Zentris con stack 100\% abierto.
+\end{itemize}
+
+\subsection{Consideraciones eticas y de seguridad al construir esto}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Un agente de ``pentesting autonomo'' nunca deberia ejecutarse contra infraestructura
+  real sin autorizacion explicita y alcance acotado (reglas de engagement) -- demostrarlo contra
+  un entorno de laboratorio propio (ej. una VM vulnerable a proposito) es suficiente para una
+  demo y evita riesgos legales.
+  \item Si el proyecto usa LLMs para decisiones de seguridad, documentar que el modelo
+  \emph{no} ejecuta acciones irreversibles sin aprobacion humana (patron EITL) -- es lo que el
+  propio mercado (incluido Zentris) ya reconoce como necesario.
+  \item Evitar prometer metricas de reduccion de falsos positivos sin mostrar la metodologia:
+  es el error de comunicacion mas comun en este espacio y fue justamente uno de los vacios
+  identificados en el analisis.
+\end{itemize}
+
+% ---------------------------------------------------------------------------
+\section{Conclusion}
+
+Resility es un MSSP chileno establecido que diferencia su oferta con Zentris, una capa de
+agentes de IA para triage, exposure management y pentesting continuo sobre el stack de
+seguridad existente del cliente (modelo agentless). La propuesta es coherente con la tendencia
+de ``SOC aumentado por IA con humano en el loop'' y esta respaldada por integraciones reales
+(Wazuh, Tenable, Bitdefender) y reconocimiento publico (ProChile). Sus afirmaciones de
+rendimiento y el detalle interno de los agentes no son publicos ni verificables desde afuera.
+Para efectos de una hackathon de ciberseguridad e IA, el valor principal de este analisis esta
+en el \textbf{blueprint de arquitectura} (seccion 7.1) y en los \textbf{vacios identificados}
+(seccion 6), que senalan exactamente donde un equipo puede diferenciarse con una demo concreta:
+evidencia/explicabilidad, guardrails de agentes ofensivos y metodologia de metricas reproducible.
+
+% ---------------------------------------------------------------------------
+\section{Evidencia y fuentes}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Repositorio con evidencia cruda:
+  \url{https://github.com/Joaquincuevas/resility-zentris-analysis}
+  \item Sitio analizado: \url{https://resility.io/}
+  \item Herramienta de referencia evaluada: \url{https://github.com/morluto/rea}
+\end{itemize}
+
+\vspace{1em}
+\noindent\small\color{brandgray}
+Informe elaborado por Joaquin Cuevas a partir de informacion publica, 20 de noviembre de 2026.
+Uso previsto: material de referencia para hackathon de ciberseguridad e IA. No constituye una
+auditoria de seguridad de Resility/Zentris ni una certificacion de sus controles internos.
+
+\end{document}
